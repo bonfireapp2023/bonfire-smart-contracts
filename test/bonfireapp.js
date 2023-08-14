@@ -1,5 +1,10 @@
 const BonfireApp = artifacts.require("BonfireApp");
 
+// permission enums: NONE, READ, READWRITE
+const NONE = 0;
+const READ = 1;
+const READ_WRITE = 2;
+
 contract("BonfireApp", (accounts) => {
   it("should add access properly", async () => {
     const BonfireAppInstance = await BonfireApp.deployed();
@@ -7,8 +12,13 @@ contract("BonfireApp", (accounts) => {
     const ownerAccount = accounts[0];
     const requesterAccount1 = accounts[1];
     const requesterAccount2 = accounts[2];
+    const requesterAccount3 = accounts[3];
 
-    await BonfireAppInstance.addAccess(requesterAccount1, {
+    await BonfireAppInstance.addAccess(requesterAccount1, READ, {
+      from: ownerAccount,
+    });
+
+    await BonfireAppInstance.addAccess(requesterAccount2, READ_WRITE, {
       from: ownerAccount,
     });
 
@@ -16,20 +26,31 @@ contract("BonfireApp", (accounts) => {
       ownerAccount,
       requesterAccount1
     );
+
     const account2Permission = await BonfireAppInstance.checkPermission.call(
       ownerAccount,
       requesterAccount2
     );
 
+    const account3Permission = await BonfireAppInstance.checkPermission.call(
+      ownerAccount,
+      requesterAccount3
+    );
+
     assert.equal(
       account1Permission,
-      true,
-      "Requester account was not added to whitelist of owner account"
+      READ,
+      "Access level for account 1 should be READ"
     );
     assert.equal(
       account2Permission,
-      false,
-      "Non-added account was included in whitelist"
+      READ_WRITE,
+      "Access level for account 2 should be READ_WRITE"
+    );
+    assert.equal(
+      account3Permission,
+      NONE,
+      "Access level for account 3 should be NONE"
     );
   });
 
@@ -38,9 +59,18 @@ contract("BonfireApp", (accounts) => {
 
     const ownerAccount = accounts[0];
     const requesterAccount1 = accounts[1];
+    const requesterAccount2 = accounts[2];
+    const requesterAccount3 = accounts[3];
 
-    // we can straight up delete it since it persists operation from the last test
     await BonfireAppInstance.deleteAccess(requesterAccount1, {
+      from: ownerAccount,
+    });
+
+    await BonfireAppInstance.deleteAccess(requesterAccount2, {
+      from: ownerAccount,
+    });
+
+    await BonfireAppInstance.deleteAccess(requesterAccount3, {
       from: ownerAccount,
     });
 
@@ -51,8 +81,8 @@ contract("BonfireApp", (accounts) => {
 
     assert.equal(
       account1Permission,
-      false,
-      "Requester account was not removed from the owner account whitelist"
+      NONE,
+      "Access level for account 1 should be NONE"
     );
   });
 
@@ -64,23 +94,36 @@ contract("BonfireApp", (accounts) => {
     const requesterAccount1 = accounts[1];
     const requesterAccount2 = accounts[2];
 
-    await BonfireAppInstance.addAccess(requesterAccount1, {
+    await BonfireAppInstance.addAccess(requesterAccount1, READ, {
       from: ownerAccount,
     });
 
-    await BonfireAppInstance.addAccess(requesterAccount2, {
+    await BonfireAppInstance.addAccess(requesterAccount2, READ_WRITE, {
       from: ownerAccount,
     });
 
-    const allowedAccounts =
-      await BonfireAppInstance.getAllowedRequestersForOwner.call(ownerAccount);
+    const allowedAccountsRead =
+      await BonfireAppInstance.getAllowedRequestersForOwner.call(
+        ownerAccount,
+        READ
+      );
 
-    console.log({ allowedAccounts });
+    const allowedAccountsReadWrite =
+      await BonfireAppInstance.getAllowedRequestersForOwner.call(
+        ownerAccount,
+        READ_WRITE
+      );
 
     assert.equal(
-      allowedAccounts,
+      allowedAccountsRead,
       [requesterAccount1, requesterAccount2],
-      "Incorrect allowed accounts list"
+      "Incorrect allowed accounts list for READ"
+    );
+
+    assert.equal(
+      allowedAccountsReadWrite,
+      [requesterAccount2],
+      "Incorrect allowed accounts list for READ_WRITE"
     );
   });
 
@@ -88,28 +131,37 @@ contract("BonfireApp", (accounts) => {
   it("should correctly show owners whom allow access for a particular requester address", async () => {
     const BonfireAppInstance = await BonfireApp.deployed();
 
-    const ownerAccount1 = accounts[3];
+    // NOTE: shared state from last block
+    const ownerAccount1 = accounts[0];
     const ownerAccount2 = accounts[4];
-    const requesterAccount1 = accounts[5];
+    const requesterAccount1 = accounts[1];
 
-    await BonfireAppInstance.addAccess(requesterAccount1, {
-      from: ownerAccount1,
-    });
-
-    await BonfireAppInstance.addAccess(requesterAccount1, {
+    await BonfireAppInstance.addAccess(requesterAccount1, READ_WRITE, {
       from: ownerAccount2,
     });
 
-    const owners = await BonfireAppInstance.getAllowedOwnersForRequester.call(
-      requesterAccount1
-    );
+    const ownersRead =
+      await BonfireAppInstance.getAllowedOwnersForRequester.call(
+        requesterAccount1,
+        READ
+      );
 
-    console.log({ owners });
+    const ownersReadWrite =
+      await BonfireAppInstance.getAllowedOwnersForRequester.call(
+        requesterAccount1,
+        READ_WRITE
+      );
 
     assert.equal(
-      owners,
+      ownersRead,
       [ownerAccount1, ownerAccount2],
-      "Incorrect owners list"
+      "Incorrect owners list for READ"
+    );
+
+    assert.equal(
+      ownersReadWrite,
+      [ownerAccount2],
+      "Incorrect owners list for READ_WRITE"
     );
   });
 });
