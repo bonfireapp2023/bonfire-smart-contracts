@@ -63,6 +63,7 @@ contract("BonfireApp", (accounts) => {
     const ownerAccount = accounts[0];
     const requesterAccount1 = accounts[1];
     const requesterAccount2 = accounts[2];
+    console.log(ownerAccount + " " + requesterAccount1 + " " +  requesterAccount2);
 
     await BonfireAppInstance.addAccess(requesterAccount1, {
       from: ownerAccount,
@@ -72,14 +73,24 @@ contract("BonfireApp", (accounts) => {
       from: ownerAccount,
     });
 
-    const allowedAccounts =
-      await BonfireAppInstance.getAllowedRequestersForOwner.call(ownerAccount);
+    const allowedAccounts = await BonfireAppInstance.getAllowedRequestersForOwner.call(ownerAccount);
 
-    console.log({ allowedAccounts });
+    console.log(allowedAccounts);
+    console.log( [requesterAccount1, requesterAccount1, requesterAccount2]);
 
     assert.equal(
-      allowedAccounts,
-      [requesterAccount1, requesterAccount2],
+      allowedAccounts[0],
+      requesterAccount1,
+      "Incorrect allowed accounts list"
+    );
+    assert.equal(
+      allowedAccounts[1],
+      requesterAccount1,
+      "Incorrect allowed accounts list"
+    );
+    assert.equal(
+      allowedAccounts[2],
+      requesterAccount2,
       "Incorrect allowed accounts list"
     );
   });
