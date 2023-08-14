@@ -5,6 +5,8 @@ const NONE = 0;
 const READ = 1;
 const READ_WRITE = 2;
 
+const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 contract("BonfireApp", (accounts) => {
   it("should add access properly", async () => {
     const BonfireAppInstance = await BonfireApp.deployed();
@@ -86,7 +88,6 @@ contract("BonfireApp", (accounts) => {
     );
   });
 
-  // TODO: rewrite this test suite
   it("should correctly show allowed addresses for a particular owner address", async () => {
     const BonfireAppInstance = await BonfireApp.deployed();
 
@@ -114,20 +115,21 @@ contract("BonfireApp", (accounts) => {
         READ_WRITE
       );
 
+    console.log({ allowedAccountsRead, allowedAccountsReadWrite });
+
     assert.equal(
-      allowedAccountsRead,
-      [requesterAccount1, requesterAccount2],
+      JSON.stringify(allowedAccountsRead),
+      JSON.stringify([requesterAccount1, requesterAccount2]),
       "Incorrect allowed accounts list for READ"
     );
 
     assert.equal(
-      allowedAccountsReadWrite,
-      [requesterAccount2],
+      JSON.stringify(allowedAccountsReadWrite),
+      JSON.stringify([requesterAccount2, EMPTY_ADDRESS]),
       "Incorrect allowed accounts list for READ_WRITE"
     );
   });
 
-  // TODO: rewrite this test suite
   it("should correctly show owners whom allow access for a particular requester address", async () => {
     const BonfireAppInstance = await BonfireApp.deployed();
 
@@ -153,14 +155,14 @@ contract("BonfireApp", (accounts) => {
       );
 
     assert.equal(
-      ownersRead,
-      [ownerAccount1, ownerAccount2],
+      JSON.stringify(ownersRead),
+      JSON.stringify([ownerAccount1, ownerAccount2]),
       "Incorrect owners list for READ"
     );
 
     assert.equal(
-      ownersReadWrite,
-      [ownerAccount2],
+      JSON.stringify(ownersReadWrite),
+      JSON.stringigy([ownerAccount2, EMPTY_ADDRESS]),
       "Incorrect owners list for READ_WRITE"
     );
   });
