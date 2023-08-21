@@ -1,5 +1,5 @@
-const BonfireApp = artifacts.require("BonfireApp");
+const BonfireFactory = artifacts.require("BonfireFactory");
 
 module.exports = function (deployer) {
-  deployer.deploy(BonfireApp);
+  deployer.deploy(BonfireFactory);
 };
